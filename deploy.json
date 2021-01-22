@@ -1,386 +1,440 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "baseUrl":{
-            "metadata": {
-                "description": "URL for downloading child templates and resources"
-            },
-            "defaultValue": "https://raw.githubusercontent.com/mikeoleary/azure-redhat-openshift-f5/",
-            "type": "string"
-        },
-        "branch":{
-            "metadata": {
-                "description": "Branch for downloading child templates and resources"
-            },
-            "defaultValue": "main",
-            "type": "string"
-        },
-        "adminUserName": {
-            "metadata": {
-                "description": "User Name for network devices"
-            },
-            "defaultValue": "azureuser",
-            "type": "string"
-        },
-        "bigipVmPassword": {
-            "metadata": {
-                "description": "Password or SSH public key to login to the Virtual Machine. Note: There are a number of special characters that you should avoid using for F5 product user accounts.  See [K2873](https://support.f5.com/csp/article/K2873) for details. Note: If using key-based authentication, this should be the public key as a string, typically starting with **---- BEGIN SSH2 PUBLIC KEY ----** and ending with **---- END SSH2 PUBLIC KEY ----**."
-            },
-            "type": "securestring"
-        },
-        "dnsLabel": {
-            "metadata": {
-                "description": "Must be globally unique DNS Name. This value is used to name resources like VMs and storage accounts. Must be letters and numbers only."
-            },
-            "type": "string"
-        },
-        "restrictedSrcAddress": {
-            "metadata": {
-                "description": "This field restricts management access to a specific network or address. Enter an IP address or address range in CIDR notation. You should use your own IP address. By using * you will leave this management console open to the Internet, which is not recommended."
-            },
-            "defaultValue": "*",
-            "type": "string"
-        },
-        "openShiftClusterName": {
-            "metadata": {
-                "description": "Name of OpenShift cluster."
-            },
-            "defaultValue": "ocpcluster",
-            "type": "string"
-        },
-        "domain": {
-            "metadata": {
-                "description": "DNS domain of your cluster. Must be globally unique and resolvable in DNS. Leave as default value if you do not have your own DNS domain name."
-            },
-            "allowedValues": [
-                "GENERATE_UNIQUE_DOMAIN_NAME"
-            ],
-            "defaultValue": "GENERATE_UNIQUE_DOMAIN_NAME",
-            "type": "string"
-        },
-        "servicePrincipalClientId": {
-            "type": "string",
-            "metadata":{
-                "description": "Service Principal with contributor rights on subscription"
-            }
-        },
-        "servicePrincipalClientSecret": {
-            "type": "securestring",
-            "metadata":{
-                "description": "Service Principal secret"
-            }
-        },
-        "aroResourceProviderObjectId": {
-            "type": "string",
-            "metadata":{
-                "description": "ObjectId of the ARO Resource Provider in your tenant. Get this from step 3 in pre-requisites."
-            }
-        },
-        "myDemoAppURL":{
-            "type": "string",
-            "metadata":{
-                "description": "Eg 'demoapp.mydomain.com'. After the deployment you will need to point this DNS record to the IP address value of the output called publicExternalLoadBalancerAddress."
-            }            
-        }
-    },
-    "variables": {
-        "temlplatesUrl": "[concat(parameters('baseUrl'), parameters('branch'), '/templates/')]",
-        "scriptsUrl": "[concat(parameters('baseUrl'), parameters('branch'), '/scripts/')]",
-        "vnetTemplateUri": "[concat(variables('temlplatesUrl'), 'vnet.json')]",
-        "f5TemplateUri": "[concat(variables('temlplatesUrl'), 'f5.json')]",
-        "updateNetworkTemplateUri": "[concat(variables('temlplatesUrl'), 'updateNetwork.json')]",
-        "aroTemplateUri": "[concat(variables('temlplatesUrl'), 'aro.json')]",
-        "deploymentScriptTemplateUri": "[concat(variables('temlplatesUrl'), 'deploymentScript.json')]",
-        "uamiTemplateUri": "[concat(variables('temlplatesUrl'), 'uami.json')]",
-        "primaryScriptUri": "[concat(variables('scriptsUrl'), 'configure-F5-OCP.sh')]",
-        "cfeScriptUri": "[concat(variables('scriptsUrl'), 'installCFE.sh')]",
-        "resourceGroupName": "[resourceGroup().name]",
-        "vnetName": "[concat(variables('resourceGroupName'), '-vnet')]",
-        "subnet1Name": "Mgmt",
-        "subnet2Name": "External",
-        "subnet3Name": "Internal",
-        "subnet4Name": "PrimarySubnet",
-        "subnet5Name": "WorkerSubnet",
-        "uniqueString": "[uniqueString( resourceGroup().id, subscription().id, deployment().name )]",
-        "uniqueStringForDnsZone": "[concat('ocp', variables('uniqueString'))]",
-        "domain": "[if(equals(parameters('domain'), 'GENERATE_UNIQUE_DOMAIN_NAME'), variables('uniqueStringForDnsZone'), parameters('domain'))]",
-        "readOnlyResourceGroupName": "[concat('aro-', variables('uniqueString'))]",
-        "storageAccountName": "[concat('sa', variables('uniqueString'))]",
-        "uamiName": "[concat('uami-', variables('uniqueString'))]"
-    },
-    "resources": [
-                    {
-                        "type": "Microsoft.Resources/deployments",
-                        "apiVersion": "2018-05-01",
-                        "name": "uamiLinkedTemplate",
-                        "properties": {
-                            "mode": "Incremental",
-                            "templateLink": {
-                                "uri": "[variables('uamiTemplateUri')]",
-                                "contentVersion":"1.0.0.0"
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "baseUrl":{
+          "metadata": {
+              "description": "URL for downloading child templates and resources"
+          },
+          "defaultValue": "https://raw.githubusercontent.com/vinnie357/azure-redhat-openshift-f5/",
+          "type": "string"
+      },
+      "branch":{
+          "metadata": {
+              "description": "Branch for downloading child templates and resources"
+          },
+          "defaultValue": "main",
+          "type": "string"
+      },
+      "adminUserName": {
+          "metadata": {
+              "description": "User Name for network devices"
+          },
+          "defaultValue": "azureuser",
+          "type": "string"
+      },
+      "bigipVmPassword": {
+          "metadata": {
+              "description": "Password or SSH public key to login to the Virtual Machine. Note: There are a number of special characters that you should avoid using for F5 product user accounts.  See [K2873](https://support.f5.com/csp/article/K2873) for details. Note: If using key-based authentication, this should be the public key as a string, typically starting with **---- BEGIN SSH2 PUBLIC KEY ----** and ending with **---- END SSH2 PUBLIC KEY ----**."
+          },
+          "type": "securestring"
+      },
+      "dnsLabel": {
+          "metadata": {
+              "description": "Must be globally unique DNS Name. This value is used to name resources like VMs and storage accounts. Must be letters and numbers only."
+          },
+          "type": "string"
+      },
+      "restrictedSrcAddress": {
+          "metadata": {
+              "description": "This field restricts management access to a specific network or address. Enter an IP address or address range in CIDR notation. You should use your own IP address. By using * you will leave this management console open to the Internet, which is not recommended."
+          },
+          "defaultValue": "*",
+          "type": "string"
+      },
+      "openShiftClusterName": {
+          "metadata": {
+              "description": "Name of OpenShift cluster."
+          },
+          "defaultValue": "ocpcluster",
+          "type": "string"
+      },
+      "domain": {
+          "metadata": {
+              "description": "DNS domain of your cluster. Must be globally unique and resolvable in DNS. Leave as default value if you do not have your own DNS domain name."
+          },
+          "allowedValues": [
+              "GENERATE_UNIQUE_DOMAIN_NAME"
+          ],
+          "defaultValue": "GENERATE_UNIQUE_DOMAIN_NAME",
+          "type": "string"
+      },
+      "servicePrincipalClientId": {
+          "type": "string",
+          "metadata":{
+              "description": "Service Principal with contributor rights on subscription"
+          }
+      },
+      "servicePrincipalClientSecret": {
+          "type": "securestring",
+          "metadata":{
+              "description": "Service Principal secret"
+          }
+      },
+      "aroResourceProviderObjectId": {
+          "type": "string",
+          "metadata":{
+              "description": "ObjectId of the ARO Resource Provider in your tenant. Get this from step 3 in pre-requisites."
+          }
+      },
+      "myDemoAppURL":{
+          "type": "string",
+          "metadata":{
+              "description": "Eg 'demoapp.mydomain.com'. After the deployment you will need to point this DNS record to the IP address value of the output called publicExternalLoadBalancerAddress."
+          }            
+      }
+  },
+  "variables": {
+      "temlplatesUrl": "[concat(parameters('baseUrl'), parameters('branch'), '/templates/')]",
+      "scriptsUrl": "[concat(parameters('baseUrl'), parameters('branch'), '/scripts/')]",
+      "vnetTemplateUri": "[concat(variables('temlplatesUrl'), 'vnet.json')]",
+      "f5TemplateUri": "[concat(variables('temlplatesUrl'), 'f5.json')]",
+      "gtmTemplateUri": "[concat(variables('temlplatesUrl'), 'gtm.json')]",
+      "updateNetworkTemplateUri": "[concat(variables('temlplatesUrl'), 'updateNetwork.json')]",
+      "aroTemplateUri": "[concat(variables('temlplatesUrl'), 'aro.json')]",
+      "deploymentScriptTemplateUri": "[concat(variables('temlplatesUrl'), 'deploymentScript.json')]",
+      "uamiTemplateUri": "[concat(variables('temlplatesUrl'), 'uami.json')]",
+      "primaryScriptUri": "[concat(variables('scriptsUrl'), 'configure-F5-OCP.sh')]",
+      "cfeScriptUri": "[concat(variables('scriptsUrl'), 'installCFE.sh')]",
+      "resourceGroupName": "[resourceGroup().name]",
+      "vnetName": "[concat(variables('resourceGroupName'), '-vnet')]",
+      "subnet1Name": "Mgmt",
+      "subnet2Name": "External",
+      "subnet3Name": "Internal",
+      "subnet4Name": "PrimarySubnet",
+      "subnet5Name": "WorkerSubnet",
+      "uniqueString": "[uniqueString( resourceGroup().id, subscription().id, deployment().name )]",
+      "uniqueStringForDnsZone": "[concat('ocp', variables('uniqueString'))]",
+      "domain": "[if(equals(parameters('domain'), 'GENERATE_UNIQUE_DOMAIN_NAME'), variables('uniqueStringForDnsZone'), parameters('domain'))]",
+      "readOnlyResourceGroupName": "[concat('aro-', variables('uniqueString'))]",
+      "storageAccountName": "[concat('sa', variables('uniqueString'))]",
+      "uamiName": "[concat('uami-', variables('uniqueString'))]"
+  },
+  "resources": [
+                  {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2018-05-01",
+                      "name": "uamiLinkedTemplate",
+                      "properties": {
+                          "mode": "Incremental",
+                          "templateLink": {
+                              "uri": "[variables('uamiTemplateUri')]",
+                              "contentVersion":"1.0.0.0"
+                          },
+                          "parameters": {
+                              "resourceName": {
+                                  "value": "[variables('uamiName')]"
+                              }
+                          }
+                      }
+                  },
+                  {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2018-05-01",
+                      "name": "vnetLinkedTemplate",
+                      "properties": {
+                          "mode": "Incremental",
+                          "templateLink": {
+                              "uri": "[variables('vnetTemplateUri')]",
+                              "contentVersion":"1.0.0.0"
+                          },
+                          "parameters": {
+                              "vnetName": {
+                                  "value": "[variables('vnetName')]"
+                              },
+                              "subnet1Name": {
+                                  "value": "[variables('subnet1Name')]"
+                              },
+                              "subnet2Name": {
+                                  "value": "[variables('subnet2Name')]"
+                              },
+                              "subnet3Name": {
+                                  "value": "[variables('subnet3Name')]"
+                              },
+                              "subnet4Name": {
+                                  "value": "[variables('subnet4Name')]"
+                              },
+                              "subnet5Name": {
+                                  "value": "[variables('subnet5Name')]"
+                              },
+                              "storageAccountName":{
+                                  "value": "[variables('storageAccountName')]"
+                              },
+                              "aro_rp_obj_id":{
+                                  "value": "[parameters('aroResourceProviderObjectId')]"
+                              }
+                          }
+                      }
+                  },
+                  {
+                    "type": "Microsoft.Resources/deployments",
+                    "apiVersion": "2018-05-01",
+                    "name": "gtmLinkedTemplate",
+                    "dependsOn": [
+                        "vnetLinkedTemplate"
+                    ],
+                    "properties": {
+                        "mode": "Incremental",
+                        "templateLink": {
+                            "uri": "[variables('gtmTemplateUri')]",
+                            "contentVersion":"8.1.1.0"
+                        },
+                        "parameters": {
+                            "adminUsername":{
+                                "value": "[parameters('adminUserName')]"
                             },
-                            "parameters": {
-                                "resourceName": {
-                                    "value": "[variables('uamiName')]"
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "type": "Microsoft.Resources/deployments",
-                        "apiVersion": "2018-05-01",
-                        "name": "vnetLinkedTemplate",
-                        "properties": {
-                            "mode": "Incremental",
-                            "templateLink": {
-                                "uri": "[variables('vnetTemplateUri')]",
-                                "contentVersion":"1.0.0.0"
+                            "adminPasswordOrKey":{
+                                "value": "[parameters('bigipVmPassword')]"
                             },
-                            "parameters": {
-                                "vnetName": {
-                                    "value": "[variables('vnetName')]"
-                                },
-                                "subnet1Name": {
-                                    "value": "[variables('subnet1Name')]"
-                                },
-                                "subnet2Name": {
-                                    "value": "[variables('subnet2Name')]"
-                                },
-                                "subnet3Name": {
-                                    "value": "[variables('subnet3Name')]"
-                                },
-                                "subnet4Name": {
-                                    "value": "[variables('subnet4Name')]"
-                                },
-                                "subnet5Name": {
-                                    "value": "[variables('subnet5Name')]"
-                                },
-                                "storageAccountName":{
-                                    "value": "[variables('storageAccountName')]"
-                                },
-                                "aro_rp_obj_id":{
-                                    "value": "[parameters('aroResourceProviderObjectId')]"
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "type": "Microsoft.Resources/deployments",
-                        "apiVersion": "2018-05-01",
-                        "name": "f5LinkedTemplate",
-                        "dependsOn": [
-                            "vnetLinkedTemplate"
-                        ],
-                        "properties": {
-                            "mode": "Incremental",
-                            "templateLink": {
-                                "uri": "[variables('f5TemplateUri')]",
-                                "contentVersion":"8.1.1.0"
+                            "dnsLabel":{
+                                "value": "[parameters('dnsLabel')]"
                             },
-                            "parameters": {
-                                "adminUsername":{
-                                    "value": "[parameters('adminUserName')]"
-                                },
-                                "adminPasswordOrKey":{
-                                    "value": "[parameters('bigipVmPassword')]"
-                                },
-                                "dnsLabel":{
-                                    "value": "[parameters('dnsLabel')]"
-                                },
-                                "provisionInternalLoadBalancer": {
-                                    "value": "No"
-                                },
-                                "bigIpModules":{
-                                    "value": "ltm:nominal,asm:nominal"
-                                },
-                                "vnetName": {
-                                    "value": "[variables('vnetName')]"
-                                },
-                                "vnetResourceGroupName":{
-                                    "value": "[variables('resourceGroupName')]"
-                                },
-                                "mgmtSubnetName":{
-                                    "value": "[variables('subnet1Name')]"
-                                },
-                                "externalSubnetName":{
-                                    "value": "[variables('subnet2Name')]"
-                                },
-                                "internalSubnetName":{
-                                    "value": "[variables('subnet3Name')]"
-                                },
-                                "restrictedSrcAddress": {
-                                    "value": "[parameters('restrictedSrcAddress')]"
-                                },
-                                "intSubnetPrivateFloatIPAddress":{
-                                    "value": "[reference('vnetLinkedTemplate').outputs.intSubnetPrivateFloatIPAddress.value]"
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "apiVersion": "2017-08-01",
-                        "name": "updateNetworkLinkedTemplate",
-                        "dependsOn":[
-                            "vnetLinkedTemplate",
-                            "f5LinkedTemplate"
-                        ],
-                        "type": "Microsoft.Resources/deployments",
-                        "properties": {
-                            "mode": "Incremental",
-                            "templateLink": {
-                                "uri": "[variables('updateNetworkTemplateUri')]",
-                                "contentVersion": "1.0.0.0"
+                            "provisionInternalLoadBalancer": {
+                                "value": "No"
                             },
-                            "parameters": {
-                                "virtualNetworkName": {
-                                    "value": "[variables('vnetName')]"
-                                },
-                                "subnetName": {
-                                    "value": "[variables('subnet2Name')]"
-                                },
-                                "subnetAddressPrefix": {
-                                    "value": "[reference('vnetLinkedTemplate').outputs.extSubnetAddressPrefix.value]"
-                                },
-                                "nsgId": {
-                                    "value": "[reference('f5LinkedTemplate').outputs.extNsgId.value]"
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "type": "Microsoft.Resources/deployments",
-                        "apiVersion": "2018-05-01",
-                        "name": "aroLinkedTemplate",
-                        "dependsOn": [
-                            "vnetLinkedTemplate"
-                        ],
-                        "properties": {
-                            "mode": "Incremental",
-                            "templateLink": {
-                                "uri": "[variables('aroTemplateUri')]",
-                                "contentVersion":"1.0.0.0"
+                            "bigIpModules":{
+                                "value": "ltm:nominal,gtm:nominal"
                             },
-                            "parameters": {
-                                "openShiftClusterName": {
-                                    "value": "[parameters('openShiftClusterName')]"
-                                },
-                                "vnetName": {
-                                    "value": "[variables('vnetName')]"
-                                },
-                                "vnetResourceGroupName": {
-                                    "value": "[variables('resourceGroupName')]"
-                                },
-                                "PrimarySubnetName": {
-                                    "value": "[variables('subnet4Name')]"
-                                },
-                                "WorkerSubnetName": {
-                                    "value": "[variables('subnet5Name')]"
-                                },
-                                "domain": {
-                                    "value": "[variables('domain')]"
-                                },
-                                "readOnlyResourceGroupName": {
-                                    "value": "[variables('readOnlyResourceGroupName')]"
-                                },
-                                "servicePrincipalclientId": {
-                                    "value": "[parameters('servicePrincipalClientId')]"
-                                },
-                                "servicePrincipalclientSecret": {
-                                    "value": "[parameters('servicePrincipalClientSecret')]"
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "type": "Microsoft.Resources/deployments",
-                        "apiVersion": "2018-05-01",
-                        "name": "deploymentScriptLinkedTemplate",
-                        "dependsOn": [
-                            "vnetLinkedTemplate",
-                            "f5LinkedTemplate",
-                            "aroLinkedTemplate",
-                            "uamiLinkedTemplate",
-                            "updateNetworkLinkedTemplate"
-                        ],
-                        "properties": {
-                            "mode": "Incremental",
-                            "templateLink": {
-                                "uri": "[variables('deploymentScriptTemplateUri')]",
-                                "contentVersion":"1.0.0.0"
+                            "vnetName": {
+                                "value": "[variables('vnetName')]"
                             },
-                            "parameters": {
-                                "userAssignedManagedIdentityId": {
-                                    "value": "[reference('uamiLinkedTemplate').outputs.identityId.value]"
-                                },
-                                "userAssignedManagedIdentityName": {
-                                    "value": "[reference('uamiLinkedTemplate').outputs.identityName.value]"
-                                },
-                                "aroClusterName": {
-                                    "value": "[parameters('openShiftClusterName')]"
-                                },
-                                "bigipMgmtAddress0": {
-                                    "value": "[reference('f5LinkedTemplate').outputs.publicMgmtAddress0.value]"
-                                },
-                                "bigipMgmtAddress1": {
-                                    "value": "[reference('f5LinkedTemplate').outputs.publicMgmtAddress1.value]"
-                                },
-                                "bigIpMgmtPassword": {
-                                    "value": "[parameters('bigipVmPassword')]"
-                                },
-                                "privateExternalVirtualIpAddress0": {
-                                    "value": "[reference('f5LinkedTemplate').outputs.privateExternalVirtualIpAddress0.value]"
-                                },
-                                "privateInternalSelfIpAddressFloat":{
-                                    "value": "[reference('f5LinkedTemplate').outputs.privateInternalSelfIpAddressFloat.value]"
-                                },
-                                "customDomain":{
-                                    "value": "[parameters('myDemoAppURL')]"
-                                },
-                                "primaryScriptUri":{
-                                    "value": "[variables('primaryScriptUri')]"
-                                },
-                                "cfeScriptUri":{
-                                    "value": "[variables('cfeScriptUri')]"
-                                },
-                                "baseUrl":{
-                                    "value": "[parameters('baseUrl')]"
-                                },
-                                "branch":{
-                                    "value": "[parameters('branch')]"
-                                }
+                            "vnetResourceGroupName":{
+                                "value": "[variables('resourceGroupName')]"
+                            },
+                            "mgmtSubnetName":{
+                                "value": "[variables('subnet1Name')]"
+                            },
+                            "externalSubnetName":{
+                                "value": "[variables('subnet2Name')]"
+                            },
+                            "internalSubnetName":{
+                                "value": "[variables('subnet3Name')]"
+                            },
+                            "restrictedSrcAddress": {
+                                "value": "[parameters('restrictedSrcAddress')]"
+                            },
+                            "intSubnetPrivateFloatIPAddress":{
+                                "value": "[reference('vnetLinkedTemplate').outputs.intSubnetPrivateFloatIPAddress.value]"
                             }
                         }
                     }
-                ],
-    "outputs": {
-        "guiUrlDevice0": {
-            "type": "string",
-            "value": "[reference('f5LinkedTemplate').outputs.guiUrlDevice0.value]"        
-        },
-        "guiUrlDevice1": {
-            "type": "string",
-            "value": "[reference('f5LinkedTemplate').outputs.guiUrlDevice1.value]"      
-        },
-        "publicExternalLoadBalancerAddress":{
-            "type": "string",
-            "value": "[reference('f5LinkedTemplate').outputs.publicExternalLoadBalancerAddress.value]"   
-        },
-        "aro_api_server": {
-            "type": "string",
-            "value": "[reference('deploymentScriptLinkedTemplate').outputs.aro_api_server.value]"
-        },
-        "aro_console_url": {
-            "type": "string",
-            "value": "[reference('deploymentScriptLinkedTemplate').outputs.aro_console_url.value]"
-        },  
-        "aro_username": {
-            "type": "string",
-            "value": "[reference('deploymentScriptLinkedTemplate').outputs.aro_username.value]"
-        },   
-        "aro_password": {
-            "type": "string",
-            "value": "[reference('deploymentScriptLinkedTemplate').outputs.aro_password.value]"
-        }
-    }
+                },
+                  {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2018-05-01",
+                      "name": "f5LinkedTemplate",
+                      "dependsOn": [
+                          "vnetLinkedTemplate"
+                      ],
+                      "properties": {
+                          "mode": "Incremental",
+                          "templateLink": {
+                              "uri": "[variables('f5TemplateUri')]",
+                              "contentVersion":"8.1.1.0"
+                          },
+                          "parameters": {
+                              "adminUsername":{
+                                  "value": "[parameters('adminUserName')]"
+                              },
+                              "adminPasswordOrKey":{
+                                  "value": "[parameters('bigipVmPassword')]"
+                              },
+                              "dnsLabel":{
+                                  "value": "[parameters('dnsLabel')]"
+                              },
+                              "provisionInternalLoadBalancer": {
+                                  "value": "No"
+                              },
+                              "bigIpModules":{
+                                  "value": "ltm:nominal,asm:nominal"
+                              },
+                              "vnetName": {
+                                  "value": "[variables('vnetName')]"
+                              },
+                              "vnetResourceGroupName":{
+                                  "value": "[variables('resourceGroupName')]"
+                              },
+                              "mgmtSubnetName":{
+                                  "value": "[variables('subnet1Name')]"
+                              },
+                              "externalSubnetName":{
+                                  "value": "[variables('subnet2Name')]"
+                              },
+                              "internalSubnetName":{
+                                  "value": "[variables('subnet3Name')]"
+                              },
+                              "restrictedSrcAddress": {
+                                  "value": "[parameters('restrictedSrcAddress')]"
+                              },
+                              "intSubnetPrivateFloatIPAddress":{
+                                  "value": "[reference('vnetLinkedTemplate').outputs.intSubnetPrivateFloatIPAddress.value]"
+                              }
+                          }
+                      }
+                  },
+                  {
+                      "apiVersion": "2017-08-01",
+                      "name": "updateNetworkLinkedTemplate",
+                      "dependsOn":[
+                          "vnetLinkedTemplate",
+                          "f5LinkedTemplate"
+                      ],
+                      "type": "Microsoft.Resources/deployments",
+                      "properties": {
+                          "mode": "Incremental",
+                          "templateLink": {
+                              "uri": "[variables('updateNetworkTemplateUri')]",
+                              "contentVersion": "1.0.0.0"
+                          },
+                          "parameters": {
+                              "virtualNetworkName": {
+                                  "value": "[variables('vnetName')]"
+                              },
+                              "subnetName": {
+                                  "value": "[variables('subnet2Name')]"
+                              },
+                              "subnetAddressPrefix": {
+                                  "value": "[reference('vnetLinkedTemplate').outputs.extSubnetAddressPrefix.value]"
+                              },
+                              "nsgId": {
+                                  "value": "[reference('f5LinkedTemplate').outputs.extNsgId.value]"
+                              }
+                          }
+                      }
+                  },
+                  {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2018-05-01",
+                      "name": "aroLinkedTemplate",
+                      "dependsOn": [
+                          "vnetLinkedTemplate"
+                      ],
+                      "properties": {
+                          "mode": "Incremental",
+                          "templateLink": {
+                              "uri": "[variables('aroTemplateUri')]",
+                              "contentVersion":"1.0.0.0"
+                          },
+                          "parameters": {
+                              "openShiftClusterName": {
+                                  "value": "[parameters('openShiftClusterName')]"
+                              },
+                              "vnetName": {
+                                  "value": "[variables('vnetName')]"
+                              },
+                              "vnetResourceGroupName": {
+                                  "value": "[variables('resourceGroupName')]"
+                              },
+                              "PrimarySubnetName": {
+                                  "value": "[variables('subnet4Name')]"
+                              },
+                              "WorkerSubnetName": {
+                                  "value": "[variables('subnet5Name')]"
+                              },
+                              "domain": {
+                                  "value": "[variables('domain')]"
+                              },
+                              "readOnlyResourceGroupName": {
+                                  "value": "[variables('readOnlyResourceGroupName')]"
+                              },
+                              "servicePrincipalclientId": {
+                                  "value": "[parameters('servicePrincipalClientId')]"
+                              },
+                              "servicePrincipalclientSecret": {
+                                  "value": "[parameters('servicePrincipalClientSecret')]"
+                              }
+                          }
+                      }
+                  },
+                  {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2018-05-01",
+                      "name": "deploymentScriptLinkedTemplate",
+                      "dependsOn": [
+                          "vnetLinkedTemplate",
+                          "f5LinkedTemplate",
+                          "aroLinkedTemplate",
+                          "uamiLinkedTemplate",
+                          "updateNetworkLinkedTemplate"
+                      ],
+                      "properties": {
+                          "mode": "Incremental",
+                          "templateLink": {
+                              "uri": "[variables('deploymentScriptTemplateUri')]",
+                              "contentVersion":"1.0.0.0"
+                          },
+                          "parameters": {
+                              "userAssignedManagedIdentityId": {
+                                  "value": "[reference('uamiLinkedTemplate').outputs.identityId.value]"
+                              },
+                              "userAssignedManagedIdentityName": {
+                                  "value": "[reference('uamiLinkedTemplate').outputs.identityName.value]"
+                              },
+                              "aroClusterName": {
+                                  "value": "[parameters('openShiftClusterName')]"
+                              },
+                              "bigipMgmtAddress0": {
+                                  "value": "[reference('f5LinkedTemplate').outputs.publicMgmtAddress0.value]"
+                              },
+                              "bigipMgmtAddress1": {
+                                  "value": "[reference('f5LinkedTemplate').outputs.publicMgmtAddress1.value]"
+                              },
+                              "bigIpMgmtPassword": {
+                                  "value": "[parameters('bigipVmPassword')]"
+                              },
+                              "privateExternalVirtualIpAddress0": {
+                                  "value": "[reference('f5LinkedTemplate').outputs.privateExternalVirtualIpAddress0.value]"
+                              },
+                              "privateInternalSelfIpAddressFloat":{
+                                  "value": "[reference('f5LinkedTemplate').outputs.privateInternalSelfIpAddressFloat.value]"
+                              },
+                              "customDomain":{
+                                  "value": "[parameters('myDemoAppURL')]"
+                              },
+                              "primaryScriptUri":{
+                                  "value": "[variables('primaryScriptUri')]"
+                              },
+                              "cfeScriptUri":{
+                                  "value": "[variables('cfeScriptUri')]"
+                              },
+                              "baseUrl":{
+                                  "value": "[parameters('baseUrl')]"
+                              },
+                              "branch":{
+                                  "value": "[parameters('branch')]"
+                              }
+                          }
+                      }
+                  }
+              ],
+  "outputs": {
+      "guiUrlDevice0": {
+          "type": "string",
+          "value": "[reference('f5LinkedTemplate').outputs.guiUrlDevice0.value]"        
+      },
+      "guiUrlDevice1": {
+          "type": "string",
+          "value": "[reference('f5LinkedTemplate').outputs.guiUrlDevice1.value]"      
+      },
+      "publicExternalLoadBalancerAddress":{
+          "type": "string",
+          "value": "[reference('f5LinkedTemplate').outputs.publicExternalLoadBalancerAddress.value]"   
+      },
+      "aro_api_server": {
+          "type": "string",
+          "value": "[reference('deploymentScriptLinkedTemplate').outputs.aro_api_server.value]"
+      },
+      "aro_console_url": {
+          "type": "string",
+          "value": "[reference('deploymentScriptLinkedTemplate').outputs.aro_console_url.value]"
+      },  
+      "aro_username": {
+          "type": "string",
+          "value": "[reference('deploymentScriptLinkedTemplate').outputs.aro_username.value]"
+      },   
+      "aro_password": {
+          "type": "string",
+          "value": "[reference('deploymentScriptLinkedTemplate').outputs.aro_password.value]"
+      }
+  }
 }
