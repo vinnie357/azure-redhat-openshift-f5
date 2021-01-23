@@ -550,7 +550,7 @@
       "publicIPAddressType": "Static",
       "mgmtPublicIPAddressName": "[concat(variables('dnsLabel'), '-gtm-mgmt-pip')]",
       "mgmtPublicIPAddressId": "[resourceId('Microsoft.Network/publicIPAddresses', variables('mgmtPublicIPAddressName'))]",
-      "mgmtNsgID": "[resourceId('Microsoft.Network/networkSecurityGroups/',concat(variables('dnsLabel'),'-mgmt-nsg'))]",
+      "mgmtNsgID": "[resourceId('Microsoft.Network/networkSecurityGroups/',concat(variables('dnsLabel'),'-gtm-mgmt-nsg'))]",
       "mgmtNicName": "[concat(variables('dnsLabel'), '-gtm-mgmt')]",
       "mgmtNicID": "[resourceId('Microsoft.Network/NetworkInterfaces', variables('mgmtNicName'))]",
       "mgmtSubnetId": "[concat(variables('vnetId'), '/subnets/', variables('mgmtSubnetName'))]",
@@ -733,7 +733,7 @@
       {
           "apiVersion": "[variables('networkApiVersion')]",
           "location": "[variables('location')]",
-          "name": "[concat(variables('dnsLabel'), '-mgmt-nsg')]",
+          "name": "[concat(variables('dnsLabel'), '-gtm-mgmt-nsg')]",
           "properties": {
               "securityRules": [
                   {
