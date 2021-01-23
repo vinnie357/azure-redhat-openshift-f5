@@ -189,9 +189,6 @@
                             "dnsLabel":{
                                 "value": "[parameters('dnsLabel')]"
                             },
-                            "provisionInternalLoadBalancer": {
-                                "value": "No"
-                            },
                             "bigIpModules":{
                                 "value": "ltm:nominal,gtm:nominal"
                             },
@@ -212,9 +209,6 @@
                             },
                             "restrictedSrcAddress": {
                                 "value": "[parameters('restrictedSrcAddress')]"
-                            },
-                            "intSubnetPrivateFloatIPAddress":{
-                                "value": "[reference('vnetLinkedTemplate').outputs.intSubnetPrivateFloatIPAddress.value]"
                             }
                         }
                     }
