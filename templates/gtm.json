@@ -332,7 +332,7 @@
       "customImage": "[replace(parameters('customImage'), 'OPTIONAL', '')]",
       "useCustomImage": "[not(empty(variables('customImage')))]",
       "createNewCustomImage": "[contains(variables('customImage'), 'https://')]",
-      "newCustomImageName": "[concat(variables('dnsLabel'), 'image')]",
+      "newCustomImageName": "[concat(variables('dnsLabel'), '-gtm-image')]",
       "storageProfileArray": {
           "customImage": {
               "imageReference": {
@@ -441,7 +441,7 @@
       "intNicName": "[concat(variables('dnsLabel'), '-gtm-int')]",
       "intNicID": "[resourceId('Microsoft.Network/NetworkInterfaces', variables('intNicName'))]",
       "intSubnetId": "[concat(variables('vnetId'), '/subnets/', variables('intsubnetName'))]",
-      "newAvailabilitySetName": "[concat(variables('dnsLabel'), '-avset')]",
+      "newAvailabilitySetName": "[concat(variables('dnsLabel'), '-gtm-avset')]",
       "availabilitySetName": "[replace(parameters('avSetChoice'), 'CREATE_NEW', variables('newAvailabilitySetName'))]",
       "zoneMappings": "[replace(toLower(string(providers('Microsoft.Compute', 'virtualMachines').zoneMappings)), ' ', '')]",
       "southcentralus": "[equals(variables('location'), string('southcentralus'))]",
@@ -551,11 +551,11 @@
       "mgmtPublicIPAddressName": "[concat(variables('dnsLabel'), '-gtm-mgmt-pip')]",
       "mgmtPublicIPAddressId": "[resourceId('Microsoft.Network/publicIPAddresses', variables('mgmtPublicIPAddressName'))]",
       "mgmtNsgID": "[resourceId('Microsoft.Network/networkSecurityGroups/',concat(variables('dnsLabel'),'-mgmt-nsg'))]",
-      "mgmtNicName": "[concat(variables('dnsLabel'), '-mgmt')]",
+      "mgmtNicName": "[concat(variables('dnsLabel'), '-gtm-mgmt')]",
       "mgmtNicID": "[resourceId('Microsoft.Network/NetworkInterfaces', variables('mgmtNicName'))]",
       "mgmtSubnetId": "[concat(variables('vnetId'), '/subnets/', variables('mgmtSubnetName'))]",
       "tagValues": "[parameters('tagValues')]",
-      "newDataStorageAccountName": "[concat(uniqueString(variables('dnsLabel'), resourceGroup().id, deployment().name), 'data000')]",
+      "newDataStorageAccountName": "[concat(uniqueString(variables('dnsLabel'), resourceGroup().id, deployment().name), 'data0001')]",
       "dataStorageAccountType": "Standard_LRS",
       "deploymentId": "[concat(variables('subscriptionId'), resourceGroup().id, deployment().name, variables('dnsLabel'))]",
       "customConfig": "### START (INPUT) CUSTOM CONFIGURATION HERE\ntmsh save sys config\n",
