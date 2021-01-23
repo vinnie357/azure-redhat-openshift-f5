@@ -406,6 +406,10 @@
           "type": "string",
           "value": "[reference('f5LinkedTemplate').outputs.guiUrlDevice0.value]"        
       },
+      "gtmGuiUrlDevice0": {
+        "type": "string",
+        "value": "[reference('gtmLinkedTemplate').outputs.guiUrlDevice0.value]"        
+    },
       "guiUrlDevice1": {
           "type": "string",
           "value": "[reference('f5LinkedTemplate').outputs.guiUrlDevice1.value]"      

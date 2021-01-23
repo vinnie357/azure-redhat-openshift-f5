@@ -906,7 +906,7 @@
       }
   ],
   "outputs": {
-      "GUI-URL": {
+      "guiUrlDevice0": {
           "type": "string",
           "value": "[if(equals(parameters('provisionPublicIP'),'No'), concat('https://', reference(variables('mgmtNicId')).ipConfigurations[0].properties.privateIPAddress, ':', variables('bigIpMgmtPort')), concat('https://', reference(variables('mgmtPublicIPAddressId')).dnsSettings.fqdn, ':', variables('bigIpMgmtPort')))]"
       },
